@@ -6,6 +6,9 @@ This repository contains work related to my graduate research in collaboration D
 
 ## Cleaning, Wrangling, and Vizualization
 The following files contain code to perform cleaning, wrangling, and visualization related to exploratory analysis, preparation for model fitting, and presentation of model results.
-*`Cleaning.R`
-*`MultinomialProbs.R`
-*`bayesMultinomial.R`
+
+* `Cleaning.R`
+
+* `MultinomialProbs.R`
+
+* `bayesMultinomial.R`
