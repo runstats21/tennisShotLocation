@@ -233,11 +233,11 @@ hp_post_samples_rloop = function(surface_num, y1, y2) {
   )
 }
 fed_vs_fed_res = hp_post_samples_rloop(1,
-                                       y1 = fed_zct_hr$hard.court,
-                                       y2 = fed_counts)
+                                       y1 = fed_zct_hr$hard.court, # fed vs. nadal ao
+                                       y2 = fed_counts_dp) # fed vs. dp uso
 
 # check convergence
-effectiveSize(samps_cur)
+effectiveSize(fed_vs_fed_res$samps_cur)
 raftery.diag(samps_cur)
 
 # save these samples
@@ -245,7 +245,7 @@ raftery.diag(samps_cur)
 # # read in samples as saved (from save Rdata file)
 # samps_cur = readRDS("./saved_data/samps_allrlocs_fdp_us2009.Rdata")
 
-saveRDS(fed_vs_fed_res$samps_cur, file = "./saved_data/samps_allrlocs_fnvsfdp_hc.Rdata")
+# saveRDS(fed_vs_fed_res$samps_cur, file = "./saved_data/samps_allrlocs_fnvsfdp_hc.Rdata")
 fed_vs_fed_res$summary_cur
 fed_vs_fed_res$ess
 
