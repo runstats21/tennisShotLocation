@@ -186,8 +186,6 @@ acf(res$samples[,1])
 # loop through all receipt locations and bind together ####
 # tennis_hp_MCMC_receipt_loop = function(p1_counts,p2_counts,n_chains) {
 surfaces = c("hard.court","clay","grass")
-s=1 # Fed vs del Potro US Open=> Hard Court
-
 hp_post_samples_rloop = function(surface_num, y1, y2) {
   
   surfaces = c("hard.court","clay","grass")
@@ -219,7 +217,7 @@ hp_post_samples_rloop = function(surface_num, y1, y2) {
       
       summary_cur = rbind(summary_cur,res$hm_out$summary$all.chains)
       rownames(summary_cur)[(1:n_parms)+(n_parms*(r-2))] = 
-        paste0(surfaces[1],"r",paste0("Z",r),"_",rownames(summary_cur)[(1:n_parms)+(n_parms*(r-2))])
+        paste0(surfaces[s],"r",paste0("Z",r),"_",rownames(summary_cur)[(1:n_parms)+(n_parms*(r-2))])
     }
   }
   end.time = Sys.time()
@@ -236,9 +234,15 @@ fed_vs_fed_res = hp_post_samples_rloop(1,
                                        y1 = fed_zct_hr$hard.court, # fed vs. nadal ao
                                        y2 = fed_counts_dp) # fed vs. dp uso
 
+nad_vs_nad_res = hp_post_samples_rloop(surface_num = 3,
+                                       y1 = nad_zct_hr$grass, # nad vs fed wim 19
+                                       y2 = nad_counts_dj) # nad vs djok wim 18
+
 # check convergence
-effectiveSize(fed_vs_fed_res$samps_cur)
-raftery.diag(samps_cur)
+raftery.diag(fed_vs_fed_res$samps_cur)
+fed_vs_fed_res$ess
+raftery.diag(nad_vs_nad_res$samps_cur)
+nad_vs_nad_res$ess
 
 # save these samples
 # saveRDS(samps_cur, file = "./saved_data/samps_allrlocs_fdp_us2009.Rdata")
@@ -246,12 +250,11 @@ raftery.diag(samps_cur)
 # samps_cur = readRDS("./saved_data/samps_allrlocs_fdp_us2009.Rdata")
 
 # saveRDS(fed_vs_fed_res$samps_cur, file = "./saved_data/samps_allrlocs_fnvsfdp_hc.Rdata")
+saveRDS(nad_vs_nad_res$samps_cur, file = "./saved_data/samps_allrlocs_nfvsndj_grass.Rdata")
 fed_vs_fed_res$summary_cur
-fed_vs_fed_res$ess
+nad_vs_nad_res$summary_cur
 
-# look at summary
-summary_cur
-rownames(summary_cur)
+
 # very interesting
 # could be worth while to test for significant differences 
 # (players appear more similar than Federer & Nadal)
@@ -470,3 +473,192 @@ side_comp = function(samps_cur, settings){
 
 side_comp(samps_cur,settings = str_c("hard.courtrZ",2:5))
 side_comp(samps_cur_ndj,settings = str_c("grassrZ",2:5))
+
+
+# zone specific differences #####
+# plus plotting
+# format: recieved from _ Hit to _ (r_h_)
+samps_cur = fed_vs_fed_res$samps_cur
+
+ratio_of_odds = function(pi1,pi2){
+  log( (pi1/(1-pi1))/(pi2/(1-pi2)) )
+}
+
+# in terms of log ratio of odds
+lor_pis = cbind(r2h2 = ratio_of_odds(samps_cur[,"hard.courtrZ2_pi1[1]"],samps_cur[,"hard.courtrZ2_pi2[1]"]),
+                r2h3 = ratio_of_odds(samps_cur[,"hard.courtrZ2_pi1[2]"],samps_cur[,"hard.courtrZ2_pi2[2]"]),
+                r2h4 = ratio_of_odds(samps_cur[,"hard.courtrZ2_pi1[3]"],samps_cur[,"hard.courtrZ2_pi2[3]"]),
+                r2h5 = ratio_of_odds(samps_cur[,"hard.courtrZ2_pi1[4]"],samps_cur[,"hard.courtrZ2_pi2[4]"]),
+
+                r3h2 = ratio_of_odds(samps_cur[,"hard.courtrZ3_pi1[1]"],samps_cur[,"hard.courtrZ3_pi2[1]"]),
+                r3h3 = ratio_of_odds(samps_cur[,"hard.courtrZ3_pi1[2]"],samps_cur[,"hard.courtrZ3_pi2[2]"]),
+                r3h4 = ratio_of_odds(samps_cur[,"hard.courtrZ3_pi1[3]"],samps_cur[,"hard.courtrZ3_pi2[3]"]),
+                r3h5 = ratio_of_odds(samps_cur[,"hard.courtrZ3_pi1[4]"],samps_cur[,"hard.courtrZ3_pi2[4]"]),
+
+                r4h2 = ratio_of_odds(samps_cur[,"hard.courtrZ4_pi1[1]"],samps_cur[,"hard.courtrZ4_pi2[1]"]),
+                r4h3 = ratio_of_odds(samps_cur[,"hard.courtrZ4_pi1[2]"],samps_cur[,"hard.courtrZ4_pi2[2]"]),
+                r4h4 = ratio_of_odds(samps_cur[,"hard.courtrZ4_pi1[3]"],samps_cur[,"hard.courtrZ4_pi2[3]"]),
+                r4h4 = ratio_of_odds(samps_cur[,"hard.courtrZ4_pi1[4]"],samps_cur[,"hard.courtrZ4_pi2[4]"]),
+                
+                r5h2 = ratio_of_odds(samps_cur[,"hard.courtrZ5_pi1[1]"],samps_cur[,"hard.courtrZ5_pi2[1]"]),
+                r5h3 = ratio_of_odds(samps_cur[,"hard.courtrZ5_pi1[2]"],samps_cur[,"hard.courtrZ5_pi2[2]"]),
+                r5h4 = ratio_of_odds(samps_cur[,"hard.courtrZ5_pi1[3]"],samps_cur[,"hard.courtrZ5_pi2[3]"]),
+                r5h5 = ratio_of_odds(samps_cur[,"hard.courtrZ5_pi1[4]"],samps_cur[,"hard.courtrZ5_pi2[4]"]))
+
+# get Bayes estimates (BEse) of log odds ratios
+ests=apply(lor_pis,2,mean)
+
+# and HPD intervals
+ests_quantiles = apply(lor_pis,2,quantile, c(0.025,0.975))
+ests_hpd = apply(as.mcmc(lor_pis),2,function(x) {HPDinterval(as.mcmc(x))})
+
+# matrices of bayes estimates
+ests_mat = rbind(z2=ests[1:4],z3=ests[5:8],z4=ests[9:12],z5=ests[13:16])
+# hce_mat = rbind(z2=hce[1:4],z3=hce[5:8],z4=hce[9:12],z5=hce[13:16])
+# ge_mat = rbind(z2=ge[1:4],z3=ge[5:8],z4=ge[9:12],z5=ge[13:16])
+colnames(ests_mat) = str_c("z",2:5)
+# colnames(hce_mat) = str_c("z",2:5)
+# colnames(ge_mat) = str_c("z",2:5)
+# columns: hit to
+# rows: received from
+
+# get significance
+ests_sig = apply(ests_hpd,2,function(vec) {
+  (vec[1]>0 & vec[2]>0) | (vec[1]<0 & vec[2]<0)
+})
+
+
+ests_df = as.data.frame(as.table(ests_mat)) %>% 
+  rename(Lands= Var1,Hit.to = Var2) %>% 
+  mutate(sig = ests_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+  mutate(sig = ifelse(sig,sig,NA))
+# hce_df = as.data.frame(as.table(hce_mat)) %>% 
+#   rename(Lands= Var1,Hit.to = Var2) %>% 
+#   mutate(sig = hce_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+#   mutate(sig = ifelse(sig,sig,NA))
+# ge_df = as.data.frame(as.table(ge_mat)) %>% 
+#   rename(Lands= Var1,Hit.to = Var2) %>% 
+#   mutate(sig = ge_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+#   mutate(sig = ifelse(sig,sig,NA))
+
+# TODO: test this on the odds scale as well
+
+# Define the color gradient
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+grain = 5
+
+# Create heat maps (modified from AI generated code)
+# NOTE: could also change text to intervals rather than estimates
+ggplot(data = ests_df, aes(x = Lands, y = Hit.to, fill = Freq)) +
+    geom_tile(aes(col = sig),lwd=1.1)+
+    coord_flip()+
+    geom_text(aes(label= round(Freq,2)))+
+    scale_fill_gradient2(limits = c(-2.3,2.3),n.breaks = grain,
+                         high = "firebrick1",low = "royalblue1",mid = "white")+
+    # scale_fill_gradientn(colours = colfunc(grain)) +
+    # scale_color_discrete(type = c("green"), labels = c("Significant"),
+    #                      na.value = "white")+
+    scale_color_manual(name = NULL,values = c("TRUE" = "green"),
+                     labels = c("Significant"),na.value = "white")+
+    theme_minimal() +
+    # guides(col = FALSE) +
+    theme(plot.title = element_text(hjust = 0.5),
+          #axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.caption = element_text(hjust = 0.5)) +
+    labs(fill = expression("log("~O[FedvNad]/O[FedvDP]~")"),col = NULL,
+         title = "Fed vs Fed log(Odds Ratio) estimates and significance",
+         caption = "Comparing Federer playing Nadal in AO vs. playing del Potro in US Open")
+
+
+# Nadal vs. Nadal
+samps_cur = nad_vs_nad_res$samps_cur
+
+ratio_of_odds = function(pi1,pi2){
+  log( (pi1/(1-pi1))/(pi2/(1-pi2)) )
+}
+
+# in terms of log ratio of odds
+lor_pis = cbind(r2h2 = ratio_of_odds(samps_cur[,"grassrZ2_pi1[1]"],samps_cur[,"grassrZ2_pi2[1]"]),
+                r2h3 = ratio_of_odds(samps_cur[,"grassrZ2_pi1[2]"],samps_cur[,"grassrZ2_pi2[2]"]),
+                r2h4 = ratio_of_odds(samps_cur[,"grassrZ2_pi1[3]"],samps_cur[,"grassrZ2_pi2[3]"]),
+                r2h5 = ratio_of_odds(samps_cur[,"grassrZ2_pi1[4]"],samps_cur[,"grassrZ2_pi2[4]"]),
+
+                r3h2 = ratio_of_odds(samps_cur[,"grassrZ3_pi1[1]"],samps_cur[,"grassrZ3_pi2[1]"]),
+                r3h3 = ratio_of_odds(samps_cur[,"grassrZ3_pi1[2]"],samps_cur[,"grassrZ3_pi2[2]"]),
+                r3h4 = ratio_of_odds(samps_cur[,"grassrZ3_pi1[3]"],samps_cur[,"grassrZ3_pi2[3]"]),
+                r3h5 = ratio_of_odds(samps_cur[,"grassrZ3_pi1[4]"],samps_cur[,"grassrZ3_pi2[4]"]),
+
+                r4h2 = ratio_of_odds(samps_cur[,"grassrZ4_pi1[1]"],samps_cur[,"grassrZ4_pi2[1]"]),
+                r4h3 = ratio_of_odds(samps_cur[,"grassrZ4_pi1[2]"],samps_cur[,"grassrZ4_pi2[2]"]),
+                r4h4 = ratio_of_odds(samps_cur[,"grassrZ4_pi1[3]"],samps_cur[,"grassrZ4_pi2[3]"]),
+                r4h4 = ratio_of_odds(samps_cur[,"grassrZ4_pi1[4]"],samps_cur[,"grassrZ4_pi2[4]"]),
+                
+                r5h2 = ratio_of_odds(samps_cur[,"grassrZ5_pi1[1]"],samps_cur[,"grassrZ5_pi2[1]"]),
+                r5h3 = ratio_of_odds(samps_cur[,"grassrZ5_pi1[2]"],samps_cur[,"grassrZ5_pi2[2]"]),
+                r5h4 = ratio_of_odds(samps_cur[,"grassrZ5_pi1[3]"],samps_cur[,"grassrZ5_pi2[3]"]),
+                r5h5 = ratio_of_odds(samps_cur[,"grassrZ5_pi1[4]"],samps_cur[,"grassrZ5_pi2[4]"]))
+
+# get Bayes estimates (BEse) of log odds ratios
+ests=apply(lor_pis,2,mean)
+
+# and HPD intervals
+ests_quantiles = apply(lor_pis,2,quantile, c(0.025,0.975))
+ests_hpd = apply(as.mcmc(lor_pis),2,function(x) {HPDinterval(as.mcmc(x))})
+
+# matrices of bayes estimates
+ests_mat = rbind(z2=ests[1:4],z3=ests[5:8],z4=ests[9:12],z5=ests[13:16])
+# hce_mat = rbind(z2=hce[1:4],z3=hce[5:8],z4=hce[9:12],z5=hce[13:16])
+# ge_mat = rbind(z2=ge[1:4],z3=ge[5:8],z4=ge[9:12],z5=ge[13:16])
+colnames(ests_mat) = str_c("z",2:5)
+# colnames(hce_mat) = str_c("z",2:5)
+# colnames(ge_mat) = str_c("z",2:5)
+# columns: hit to
+# rows: received from
+
+# get significance
+ests_sig = apply(ests_hpd,2,function(vec) {
+  (vec[1]>0 & vec[2]>0) | (vec[1]<0 & vec[2]<0)
+})
+
+
+ests_df = as.data.frame(as.table(ests_mat)) %>% 
+  rename(Lands= Var1,Hit.to = Var2) %>% 
+  mutate(sig = ests_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+  mutate(sig = ifelse(sig,sig,NA))
+# hce_df = as.data.frame(as.table(hce_mat)) %>% 
+#   rename(Lands= Var1,Hit.to = Var2) %>% 
+#   mutate(sig = hce_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+#   mutate(sig = ifelse(sig,sig,NA))
+# ge_df = as.data.frame(as.table(ge_mat)) %>% 
+#   rename(Lands= Var1,Hit.to = Var2) %>% 
+#   mutate(sig = ge_sig[c(1,5,9,13,2,6,10,14,3,7,11,15,4,8,12,16)]) %>% 
+#   mutate(sig = ifelse(sig,sig,NA))
+
+# TODO: test this on the odds scale as well
+
+# Define the color gradient
+colfunc <- colorRampPalette(c("blue", "white", "red"))
+grain = 5
+
+# Create heat maps (modified from AI generated code)
+# NOTE: could also change text to intervals rather than estimates
+ggplot(data = ests_df, aes(x = Lands, y = Hit.to, fill = Freq)) +
+    geom_tile(aes(col = sig),lwd=1.1)+
+    coord_flip()+
+    geom_text(aes(label= round(Freq,2)))+
+    scale_fill_gradient2(limits = c(-2.3,2.3),n.breaks = grain,
+                         high = "firebrick1",low = "royalblue1",mid = "white")+
+    # scale_fill_gradientn(colours = colfunc(grain)) +
+    # scale_color_discrete(type = c("green"), labels = c("Significant"),
+    #                      na.value = "white")+
+    scale_color_manual(name = NULL,values = c("TRUE" = "green"),
+                     labels = c("Significant"),na.value = "white")+
+    theme_minimal() +
+    # guides(col = FALSE) +
+    theme(plot.title = element_text(hjust = 0.5),
+          #axis.text.x = element_text(angle = 90, hjust = 1),
+          plot.caption = element_text(hjust = 0.5)) +
+    labs(fill = expression("log("~O[NadvFed]/O[NadvDj]~")"),col = NULL,
+         title = "Nadal vs Nadal log(Odds Ratio) estimates and significance",
+         caption = "Comparing Nadal playing Federer in Wimbledon 2019 vs. playing Djokovic in Wimbledon 2018")
+
