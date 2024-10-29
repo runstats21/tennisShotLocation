@@ -1,5 +1,5 @@
 # Learning Tennis Shot Location Strategy through Bayesian Modeling
-This repository contains work related to my graduate research in collaboration Dr. Garritt Page, Dr. Gilbert Fellingham, and Dr. Alejandro Jara analyzing tennis shot location strategy.
+This repository contains work related to tennis analytics research in collaboration Dr. Garritt Page, Dr. Gilbert Fellingham, and Dr. Alejandro Jara analyzing tennis shot location strategy.
 
 ## Data
 `AustrailianOpen/`, `FrenchOpen/`, `USOpen/`, and `Wimbledon/` contain raw datasets hand-collected from Major Profession Tennis matches between Roger Federer and Rafael Nadal, Federer and Juan Martin del Potro, and Nadal and Novak Djokovic.
